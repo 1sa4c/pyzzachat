@@ -1,0 +1,17 @@
+0 Codes - Server announcements
+[00] - Server hello
+[01] - Awaiting credentials
+[02] - User authenticated
+
+1 Codes - Client announcements
+[10] - Login credentials
+[11] - Register credentials
+
+2 Codes - Messages
+[20] - Server banner
+
+3 Codes - Errors
+[30] - Bad formatting
+[31] - Wrong credentials
+[32] - Username exists
+
