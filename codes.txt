@@ -9,6 +9,8 @@
 
 2 Codes - Messages
 [20] - Server banner
+[21] - Client-to-server message
+[22] - Server-to-client message
 
 3 Codes - Errors
 [30] - Bad formatting
