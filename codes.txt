@@ -15,5 +15,7 @@
 3 Codes - Errors
 [30] - Bad formatting
 [31] - Wrong credentials
-[32] - Username exists
+[32] - Username already exists
+[33] - Database error
+[34] - Message too long
 

@@ -27,9 +27,31 @@ class Client:
         return (ip, port)
 
 
+    def receive_message(self):
+        buffer = self.socket.recv(3).decode()
+        if not buffer:
+            self.socket.close()
+            sys.exit(1)
+
+        bufsize = int(buffer)
+        code, message = utils.parse_message(self.socket.recv(bufsize).decode())
+        return code, message
+
+
+    def send_message(self, message):
+        encoded_message = message.encode()
+        bufsize = len(encoded_message)
+        encoded_bufsize = ('%03d' % bufsize).encode()
+
+        if len(str(bufsize).encode()) > 3:
+            print('[!] Message too long')
+        else:
+            self.socket.send(encoded_bufsize)
+            self.socket.send(encoded_message)
+
+
     def handle_handshake(self):
-        hello = self.socket.recv(54).decode()
-        code, _ = utils.parse_message(hello)
+        code, _ = self.receive_message()  # Server hello
         if code == '00':
             print('[*] Connected to server')
         else:
@@ -37,8 +59,7 @@ class Client:
             self.socket.close()
             sys.exit(1)
 
-        login = self.socket.recv(54).decode()
-        code, _ = utils.parse_message(login)
+        code, _ = self.receive_message()  # Awaiting credentials
         if code == '01':
             print('[*] Starting authentication')
         else:
@@ -61,9 +82,8 @@ class Client:
         username = input('Username: ')
         password = input('Password: ')
 
-        self.socket.send(f'{header}{username}:{password}'.encode())
-        authentication = self.socket.recv(54).decode()
-        code, _ = utils.parse_message(authentication)
+        self.send_message(f'{header}{username}:{password}')
+        code, _ = self.receive_message()  # Authentication
 
         if code == '02':
             print('[*] Successfully authenticated')
@@ -76,6 +96,10 @@ class Client:
             print('[!] Username or password wrong')
         elif code == '32':
             print('[!] Username already in use')
+        elif code == '33':
+            print('[!] Database error')
+        elif code == '34':
+            print('[!] Message too long')
         else:
             print('[!] Authentication error ocurred')
 
@@ -90,12 +114,16 @@ class Client:
 
         while True:
             message = input('>>')
+            if not t.is_alive():
+                sys.exit(1)
+            if not message:
+                continue
             if message == '/quit':
-                print('[*] Closing connection and quiting...')
+                print('[*] Closing connection and quitting...')
                 self.socket.close()
                 sys.exit(0)
             else:
-                self.socket.send(f'[21]{message}'.encode())
+                self.send_message(f'[21]{message}')
 
 
 
@@ -103,16 +131,14 @@ class Client:
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
             for item in self.messages:
-                    print(item)
+                print(item)
 
-            message = self.socket.recv(1024).decode()
-            code, text = utils.parse_message(message)
+            code, text = self.receive_message()
 
             if code == '20' or code == '22':
                 self.messages.append(text)
             else:
                 print(f'[!] Something went wrong... disconnecting from server.')
-                print('Type /quit to exit the program')
                 self.socket.close()
                 return
 
